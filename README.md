@@ -409,3 +409,540 @@ dist/app.b894f269.js
 }]);
 ```
 
+### vue配置
+
+#### vue
+
+```bash
+yarn add vue || npm install -S vue
+```
+
+#### vue-loader（vue加载器）
+
+```bash
+yarn add -D vue-loader || npm install -D vue-loader
+```
+
+#### vue-template-compiler（.vue文件模版编译器）
+
+```bash
+yarn add -D vue-template-compiler || npm install -D vue-template-compiler
+```
+
+#### vue-class-component（vue类组件）
+
+```bash
+yarn add  vue-class-component || npm install -S vue-class-component
+```
+
+#### vue-property-decorator（vue属性装饰器）
+
+```bash
+yarn add  vue-property-decorator || npm install vue-property-decorator
+```
+
+ok, 然后我们修改一下配置文件，让webpack支持.vue文件解析，
+
+webpack.config.js：
+
+```js
+const path = require("path");
+const config = new (require("webpack-chain"))();
+config
+    .context(path.resolve(__dirname, ".")) //webpack上下文目录为项目根目录
+    .entry("app") //入口文件名称为app
+        .add("./src/main.ts") //入口文件为./src/main.ts
+        .end()
+    .output
+        .path(path.join(__dirname,"./dist")) //webpack输出的目录为根目录的dist目录
+        .filename("[name].[hash:8].js")
+        .end()
+    .resolve
+        .extensions
+            .add(".js").add(".jsx").add(".ts").add(".tsx").add(".vue") //配置以.js等结尾的文件当模块使用的时候都可以省略后缀
+            .end()
+        .end()
+    .module
+        .rule("type-script")
+            .test(/\.tsx?$/) //loader加载的条件是ts或tsx后缀的文件
+            .use("ts-loader")
+                .loader("ts-loader")
+                .options({ //ts-loader相关配置
+                    transpileOnly: true,
+                    appendTsSuffixTo: ['\\.vue$']
+                })
+                .end()
+            .end()
+        .rule("vue")
+            .test(/\.vue$/)// 匹配.vue文件
+                .use("vue-loader")
+                .loader("vue-loader")
+                .end()
+            .end()
+        .end()
+    .plugin("vue-loader-plugin")//vue-loader必须要添加vue-loader-plugin
+        .use(require("vue-loader").VueLoaderPlugin,[])
+        .end()
+    .devServer
+        .host("0.0.0.0") //为了让外部服务访问
+        .port(8090) //当前端口号
+        .hot(true) //热载
+        .open(true) //开启页面
+module.exports = config.toConfig();
+```
+
+然后我们去src目录下创建一个app.vue文件用来测试，
+
+src/app.vue:
+
+```vue
+<template>
+    <div>{{this.msg}}</div>
+</template>
+
+<script lang="ts">
+  import {Vue, Component} from "vue-property-decorator";
+
+  @Component
+  export default class App extends Vue {
+    msg="hello world"
+  }
+</script>
+
+<style scoped>
+
+</style>
+```
+
+很简单，就是输出一个"hello world"到页面，然后我们修改一下“main.ts”文件，
+
+src/main.ts:
+
+```tsx
+import Vue from "vue";
+import App from "./app.vue";
+
+new Vue({
+  el: "#app",
+  render: (h) => h(App)
+});
+```
+
+ok! 我们直接运行一下`npm run dev`:
+
+```bash
+192:webpack-vue-demo yinqingyang$ npm run dev
+
+> webpack-vue-demo@1.0.0 dev xxx/webpack-vue-demo
+> webpack-dev-server --mode=development --progress
+
+10% building 2/2 modules 0 activeℹ ｢wds｣: Project is running at http://0.0.0.0:8090/
+ℹ ｢wds｣: webpack output is served from /
+ℹ ｢wds｣: Content not from webpack is served from xxx/xxx/webpack-vue-demo
+10% building 5/15 modules 10 activexxx/webpack-vue-demo/node_modules/webpack-dev-server/client/utils/createSocketUrℹ ｢wdm｣: wait until bundle finished: /
+ℹ ｢wdm｣: Hash: 6b8de437340cfe2ceccd
+Version: webpack 4.44.0
+Time: 2431ms
+Built at: 07/27/2020 8:57:11 PM
+          Asset     Size  Chunks                         Chunk Names
+app.6b8de437.js  697 KiB     app  [emitted] [immutable]  app
+Entrypoint app = app.6b8de437.js
+...
+[./src/main.ts] 108 bytes {app} [built]
+    + 35 hidden modules
+ℹ ｢wdm｣: Compiled successfully.
+
+
+```
+
+可以看到，webpack-dev-server服务已经开启了，并且服务器在8090端口监听，我们直接浏览器打开链接：http://0.0.0.0:8090/webpack-dev-server：
+
+![webpack-dev-s](/Users/yinqingyang/前端架构系列之(webpack)/webpack-vue-demo/webpack-dev-s.png)
+
+webpack-dev-server会把所有生成的文件列在这里，“app.6b8de437.js”就是webpack根据入口main.ts文件生成的bundle文件。
+
+接下来我们创建一个public目录，然后在public目录中创建一个叫index.html的文件用来测试，
+
+public/index.html:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<noscript>your browser should support javascript!</noscript>
+<div id="app"></div>
+<script src="http://0.0.0.0:8090/app.6b8de437.js"></script>
+</body>
+</html>
+```
+
+ok，可以看到，我们直接放了一个div元素供main.ts中的vue实例挂载，然后就是直接一个script标签加载入口文件，我们直接把index.html文件在浏览器打开：
+
+![result1](/Users/yinqingyang/前端架构系列之(webpack)/webpack-vue-demo/result1.png)
+
+可以看到，浏览器中显示了我们的预期结果！ 但是我们是手动的去引入“app.6b8de437.js”文件的，这难免有点不方便，所以接下来我们让它自动导入bundle文件到模版html文件中。
+
+### html-webpack-plugin
+
+我们首先安装html-webpack-plugin：
+
+```bash
+yarn add -D html-webpack-plugin || npm install -D html-webpack-plugin
+```
+
+然后修改一下配置文件添加html-webpack-plugin插件，
+
+webpack.config.js：
+
+```js
+const path = require("path");
+const config = new (require("webpack-chain"))();
+config
+    .context(path.resolve(__dirname, ".")) //webpack上下文目录为项目根目录
+    .entry("app") //入口文件名称为app
+        .add("./src/main.ts") //入口文件为./src/main.ts
+        .end()
+    .output
+        .path(path.join(__dirname,"./dist")) //webpack输出的目录为根目录的dist目录
+        .filename("[name].[hash:8].js")
+        .end()
+    .resolve
+        .extensions
+            .add(".js").add(".jsx").add(".ts").add(".tsx").add(".vue") //配置以.js等结尾的文件当模块使用的时候都可以省略后缀
+            .end()
+        .end()
+    .module
+        .rule("type-script")
+            .test(/\.tsx?$/) //loader加载的条件是ts或tsx后缀的文件
+            .use("ts-loader")
+                .loader("ts-loader")
+                .options({ //ts-loader相关配置
+                    transpileOnly: true,
+                    appendTsSuffixTo: ['\\.vue$']
+                })
+                .end()
+            .end()
+        .rule("vue")
+            .test(/\.vue$/)// 匹配.vue文件
+                .use("vue-loader")
+                .loader("vue-loader")
+                .end()
+            .end()
+        .end()
+    .plugin("vue-loader-plugin")//vue-loader必须要添加vue-loader-plugin
+        .use(require("vue-loader").VueLoaderPlugin,[])
+        .end()
+    .plugin("html")// 添加html-webpack-plugin插件
+        .use(require("html-webpack-plugin"),[{
+            template: path.resolve(__dirname,"./public/index.html"), //指定模版文件
+            chunks:["app"], //指定需要加载的chunk
+            inject: "body" //指定script脚本注入的位置为body
+        }])
+        .end()
+    .devServer
+        .host("0.0.0.0") //为了让外部服务访问
+        .port(8090) //当前端口号
+        .hot(true) //热载
+        .open(true) //开启页面
+module.exports = config.toConfig();
+```
+
+ok，然后我们直接`npm run dev`:
+
+```bash
+npm run dev
+```
+
+运行后会发现浏览器自动打开了http://0.0.0.0:8090/页面：
+
+![result2](/Users/yinqingyang/前端架构系列之(webpack)/webpack-vue-demo/result2.png)
+
+虽然是运行成功了，但是ide一直在提示有个地方报错：
+
+![no-declarations](/Users/yinqingyang/前端架构系列之(webpack)/webpack-vue-demo/no-declarations.png)
+
+意思就是：“导入的app.vue并没有类型声明文件”，ok，我们直接在src目录底下创建一个shims-vue.d.ts文件用来声明.vue 文件导出的类型，
+
+src/shims-vue.d.ts：
+
+```ts
+declare module "*.vue" {
+  import Vue from "vue";
+  export default Vue;
+}
+
+```
+
+我们直接声明了一个module,然后导出一个vue实例，声明之后就会发现ide报错没有了。
+
+### css样式（scss）
+
+我们试着在vue模版中使用一下sass语法：
+
+src/app.vue
+
+```vue
+<template>
+    <div class="app-container">{{this.msg}}</div>
+</template>
+
+<script lang="ts">
+  import {Vue, Component} from "vue-property-decorator";
+
+  @Component
+  export default class App extends Vue {
+    msg="hello world"
+  }
+</script>
+
+<style scoped lang="scss">
+.app-container{
+    color: red;
+}
+</style>
+```
+
+```bash
+...
+File was processed with these loaders:
+ * ./node_modules/vue-loader/lib/index.js
+You may need an additional loader to handle the result of these loaders.
+| 
+| 
+> .app-container{
+|     color: red;
+| }
+ @ ./src/app.vue?vue&type=style&index=0&id=5ef48958&scoped=true&lang=scss& 1:0-148 1:164-167 1:169-314 1:169-314
+ @ ./src/app.vue
+ @ ./src/main.ts
+ @ multi ./src/main.ts
+ℹ ｢wdm｣: Failed to compile.
+```
+
+ok, 开启webpack服务后会发现报错了：“找不到能够解析当前样式语法的loader”，那我们接下来就让webpack支持scss语法。
+
+#### sass（scss&&sass语法）
+
+```bash
+yarn add -D sass || npm install -D sass
+```
+
+#### sass-loader（sass&&scss文件加载器）
+
+```bash
+yarn add -D sass-loader || npm install -D sass-loader
+```
+
+#### postcss-loader(css样式处理工具)
+
+比如：自动添加浏览器适配前缀、压缩css样式等等
+
+```bash
+yarn add -D postcss-loader || npm install -D postcss-loader
+```
+
+##### cssnano(压缩css)
+
+```bash
+yarn add -D cssnano || npm install -D cssnano
+```
+
+##### autoprefixer(自动添加浏览器适配前缀)
+
+```bash
+yarn add -D autoprefixer || npm install -D autoprefixer
+```
+
+#### css-loader(css模块加载器)
+
+```bash
+yarn add -D css-loader || npm install -D css-loader
+```
+
+#### mini-css-extract-plugin(抽离css样式到独立的.css文件)
+
+```bash
+yarn add -D mini-css-extract-plugin || npm install -D mini-css-extract-plugin
+```
+
+然后修改配置文件，webpack.config.js：
+
+```js
+const path = require("path");
+const config = new (require("webpack-chain"))();
+const isDev = process.env.WEBPACK_DEV_SERVER;
+config
+    .context(path.resolve(__dirname, ".")) //webpack上下文目录为项目根目录
+    .entry("app") //入口文件名称为app
+        .add("./src/main.ts") //入口文件为./src/main.ts
+        .end()
+    .output
+        .path(path.join(__dirname,"./dist")) //webpack输出的目录为根目录的dist目录
+        .filename("[name].[hash:8].js")
+        .end()
+    .resolve
+        .extensions
+            .add(".js").add(".jsx").add(".ts").add(".tsx").add(".vue") //配置以.js等结尾的文件当模块使用的时候都可以省略后缀
+            .end()
+        .end()
+    .module
+        .rule("type-script")
+            .test(/\.tsx?$/) //loader加载的条件是ts或tsx后缀的文件
+            .use("ts-loader")
+                .loader("ts-loader")
+                .options({ //ts-loader相关配置
+                    transpileOnly: true,
+                    appendTsSuffixTo: ['\\.vue$']
+                })
+                .end()
+            .end()
+        .rule("vue")
+            .test(/\.vue$/)// 匹配.vue文件
+                .use("vue-loader")
+                .loader("vue-loader")
+                .end()
+            .end()
+        .rule("sass")
+            .test( /\.(sass|scss)$/)//sass和scss文件
+            .use("extract-loader")//提取css样式到单独css文件
+                .loader(require('mini-css-extract-plugin').loader)
+                .options({
+                    hmr: isDev //开发环境开启热载
+                })
+                .end()
+            .use("css-loader")//加载css模块
+                .loader("css-loader")
+                .end()
+            .use("postcss-loader")//处理css样式
+                .loader("postcss-loader")
+                .options( {
+                    config: {
+                       path: path.resolve(__dirname, "./postcss.config.js")
+                    }
+                })
+                .end()
+            .use("sass-loader")//sass语法转css语法
+                .loader("sass-loader")
+                .end()
+            .end()
+        .end()
+    .plugin("vue-loader-plugin")//vue-loader必须要添加vue-loader-plugin
+        .use(require("vue-loader").VueLoaderPlugin,[])
+        .end()
+    .plugin("html")// 添加html-webpack-plugin插件
+        .use(require("html-webpack-plugin"),[{
+            template: path.resolve(__dirname,"./public/index.html"), //指定模版文件
+            chunks:["app"], //指定需要加载的chunk
+            inject: "body" //指定script脚本注入的位置为body
+        }])
+        .end()
+    .plugin("extract-css")//提取css样式到单独css文件
+        .use(require('mini-css-extract-plugin'), [{
+            filename: "css/[name].css",
+            chunkFilename: "css/[name].css"
+        }])
+        .end()
+    .devServer
+        .host("0.0.0.0") //为了让外部服务访问
+        .port(8090) //当前端口号
+        .hot(true) //热载
+        .open(true) //开启页面
+module.exports = config.toConfig();
+```
+
+然后我们给postcss指定配置文件，我们在根目录创建一个postcss.config.js：
+
+```js
+module.exports = {
+    plugins: [
+        require("autoprefixer")(),
+        require("cssnano")({
+            preset: ['default', {
+                mergeLonghand: false,
+                cssDeclarationSorter: false
+            }]
+        })
+    ]
+};
+```
+
+可以看到，我们加入了“autoprefixer”跟“cssnano”插件用于自动添加浏览器前缀跟css压缩，然后我们在根目录创建一个.browserslistrc用于当前项目浏览器列表，
+
+.browserslistrc：
+
+```js
+> 0.25%, not dead
+```
+
+css样式相关的配置我这里就不详细说明了，不懂的小伙伴可以看前面的文章，配置完css后我们再看一下我们的app.vue文件，
+
+src/app.vue:
+
+```vue
+<template>
+    <div class="app-container">{{this.msg}}</div>
+</template>
+
+<script lang="ts">
+  import {Vue, Component} from "vue-property-decorator";
+
+  @Component
+  export default class App extends Vue {
+    msg="hello world"
+  }
+</script>
+
+<style scoped lang="scss">
+.app-container{
+    color: green;
+}
+</style>
+```
+
+👌，可以看到，我们给了当前div一个样式：
+
+```css
+.app-container{
+    color: green;
+}
+```
+
+然后我们运行`npm run dev`指令：
+
+```bash
+npm run dev
+```
+
+![css-green](/Users/yinqingyang/前端架构系列之(webpack)/webpack-vue-demo/css-green.png)
+
+ok, 然后我们修改成为红色试试，src/app.vue:
+
+```vue
+<template>
+    <div class="app-container">{{this.msg}}</div>
+</template>
+
+<script lang="ts">
+  import {Vue, Component} from "vue-property-decorator";
+
+  @Component
+  export default class App extends Vue {
+    msg="hello world"
+  }
+</script>
+
+<style scoped lang="scss">
+.app-container{
+    color: red;
+}
+</style>
+```
+
+![css-red](/Users/yinqingyang/前端架构系列之(webpack)/webpack-vue-demo/css-red.png)
+
+可以看到，当我们修改了样式后，mini-css-extract-plugin触发了热载，页面样式自动更新。
+
