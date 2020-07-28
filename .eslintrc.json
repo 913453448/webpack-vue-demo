@@ -1,0 +1,27 @@
+{
+  "env": {
+    "node": true //主要争对webpack配置文件等等node环境
+  },
+  "plugins": [
+    "vue" //添加eslint-plugin-vue插件
+  ],
+  "extends": [
+    "eslint:recommended", //eslint推荐语法
+    "plugin:vue/recommended", //使用vue推荐语法
+    "@vue/typescript/recommended",//继承typescript插件的recommended配置
+    "@vue/prettier",
+    "@vue/prettier/@typescript-eslint"
+  ],
+  "rules": {
+    "semi": [
+      "error",
+      "always"
+    ],
+    "quotes": [
+      "error",
+      "double"
+    ],
+    "no-console": "error"
+  }
+}
+
