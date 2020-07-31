@@ -78,8 +78,8 @@ config
                 .use('eslint-loader')
                 .loader(require.resolve('eslint-loader'))
                 .options({
-                    emitWarning: true, //把eslint报错当成webpack警告
-                    emitError: !isDev, //把eslint报错当成webapck的错误
+                    emitWarning: isDev, //把eslint报错当成webpack警告
+                    emitError: isDev, //把eslint报错当成webapck的错误
                 })
                 .end()
             .end()
