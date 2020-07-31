@@ -78,8 +78,8 @@ config
                 .use('eslint-loader')
                 .loader(require.resolve('eslint-loader'))
                 .options({
-                    emitWarning: isDev, //把eslint报错当成webpack警告
-                    emitError: isDev, //把eslint报错当成webapck的错误
+                    emitWarning: true, //把eslint报错当成webpack警告
+                    emitError: !isDev, //把eslint报错当成webapck的错误
                 })
                 .end()
             .end()
@@ -121,7 +121,7 @@ config
         .hot(true) //热载
         .open(true) //开启页面
         .overlay({
-            warnings: true,
+            warnings: false,
             errors: true
         }) //webpack错误和警告信息显示到页面
 config.when(!isDev,()=>{

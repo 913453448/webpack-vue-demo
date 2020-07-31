@@ -1,5 +1,5 @@
 <template>
-  <div class="app-container">{{ this.msg }}</div>
+  <div class="app-container">{{ msg }}</div>
 </template>
 
 <script lang="ts">
@@ -11,8 +11,8 @@ export default class App extends Vue {
   user = {
     name: "yasin"
   };
-  created() {
-    const name = this.user?.name;
+  created(): void {
+    // const name = this.user?.name;
     // console.log("name");
   }
 }
