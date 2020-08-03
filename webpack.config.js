@@ -115,6 +115,9 @@ config
             }
         }])
         .end()
+    .plugin('opx-plugin')
+        .use(require('./plugins/Opx-webpack-plugin'),[{}])
+        .end()
     .devServer
         .host("0.0.0.0") //为了让外部服务访问
         .port(8090) //当前端口号
