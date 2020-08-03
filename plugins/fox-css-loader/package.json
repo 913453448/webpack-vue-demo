@@ -1,0 +1,25 @@
+{
+  "name": "@fox/fox-css-loader",
+  "version": "1.0.0",
+  "description": "fox-css-loader",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "yasin <yin.qingyang@opg.cn>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "http://git.erp.ocj.com.cn:9000/fe/opgpublic/fox.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "postcss": "^7.0.32",
+    "postcss-plugin-px2rem": "^0.8.1"
+  },
+  "dependencies": {
+    "amfe-flexible": "^2.2.1"
+  }
+}
