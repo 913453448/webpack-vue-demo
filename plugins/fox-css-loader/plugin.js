@@ -12,7 +12,6 @@ class FpxWebpackPlugin {
                 if (!(compiler.options.entry[key] instanceof Array)) {
                     compiler.options.entry[key] = [compiler.options.entry[key]];
                 }
-                //TODO 通过node_modules添加flexible.js
                 compiler.options.entry[key] = ["!!" + require.resolve("amfe-flexible/index.min.js"), ...compiler.options.entry[key]];
             });
         }
