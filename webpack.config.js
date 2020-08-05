@@ -59,7 +59,7 @@ config
                 .loader("css-loader")
                 .end()
             .use("fpx-loader")
-                .loader(require.resolve("./plugins/fox-css-loader"))
+                .loader(require.resolve("fpx-webpack-loader"))
                 .end()
             .use("postcss-loader")//处理css样式
                 .loader("postcss-loader")
@@ -119,7 +119,7 @@ config
         }])
         .end()
     .plugin('opx-plugin')
-        .use(require('./plugins/fox-css-loader').FoxCssPlugin,[{}])
+        .use(require('fpx-webpack-loader').FoxCssPlugin,[{}])
         .end()
     .devServer
         .host("0.0.0.0") //为了让外部服务访问
