@@ -22,7 +22,6 @@ export default class App extends Vue {
 .app-container {
   color: red;
   width: 200fpx;
-  background: green;
 }
 </style>
 <style lang="scss">
